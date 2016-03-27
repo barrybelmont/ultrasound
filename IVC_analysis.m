@@ -1,21 +1,31 @@
 
 %% Open dataset
 dataset = 'dialysis';
-cd(strcat('/Volumes/usb/',dataset))
-files = dir;
-files = files(arrayfun(@(x) ~strcmp(x.name(1),'.'),files));
+cd('/Volumes/usb/')
 
-for i = 1:numel(files)
-    % Patient ID
-    data(i).name = files(i).name(1:7);
+% Check to see if dataset exists, if it does, load. If not, create it.
+if exist(strcat(dataset,'.mat')) == 2
+    load(strcat(dataset,'.mat'));
+    cd(strcat('/Volumes/usb/',dataset))
     
-    % Look for hyphenated information (before/after)
-    if length(find(files(i).name=='-',2)) > 1
-        hyphens = find(files(i).name=='-',2);
-        data(i).when = files(i).name(hyphens(1)+1:hyphens(2)-1);
-    end
+else
+    cd(strcat('/Volumes/usb/',dataset))
+    files = dir;
+    files = files(arrayfun(@(x) ~strcmp(x.name(1),'.'),files));
+    
+    for i = 1:numel(files)
+        % Patient ID
+        data(i).name = files(i).name(1:7);
         
+        % Look for hyphenated information (before/after)
+        if length(find(files(i).name=='-',2)) > 1
+            hyphens = find(files(i).name=='-',2);
+            data(i).when = files(i).name(hyphens(1)+1:hyphens(2)-1);
+        end
+        
+    end
 end
+
 
 %% Go through samples
 % Which file number are we working on now?
@@ -101,3 +111,10 @@ end
 
 data(sample).diamALL = pointDist*MM_PER_PIXEL;
 data(sample).MM_PER_PIXEL = MM_PER_PIXEL;
+
+%% Save data
+cd('/Volumes/usb/');
+save(strcat(dataset,'.mat'),'data')
+cd('/Users/barrybelmont/Documents/ultrasound');
+save(strcat(dataset,'.mat'),'data')
+

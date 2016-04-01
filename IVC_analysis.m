@@ -7,6 +7,8 @@ cd('/Volumes/usb/')
 if exist(strcat(dataset,'.mat')) == 2
     load(strcat(dataset,'.mat'));
     cd(strcat('/Volumes/usb/',dataset))
+    files = dir;
+    files = files(arrayfun(@(x) ~strcmp(x.name(1),'.'),files));
     
 else
     cd(strcat('/Volumes/usb/',dataset))
@@ -50,7 +52,9 @@ figHandle = gcf;
 close
 
 poiX = round(poiX);     poiY = round(poiY);
-points = [poiX, poiY];
+harrisThresh = 20;
+points = findNearestHarrisCorner(objectFrame, [poiX, poiY], harrisThresh);
+% points = [poiX, poiY];
 nPoints = size(poiX,1);
 pointLog = zeros(nPoints, 2, nFrames);
 

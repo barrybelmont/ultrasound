@@ -39,6 +39,9 @@ quality = min(abs(m - n),abs(m + n));
 for indPoints = 1:size(points,1)
     maxVal = 0;
     a = 1;
+    
+    % Need a better search condition that returns best value without going
+    % too far away and without favoring the edges so much (like this does)
     while maxVal < (thresh - a) % Drop the quality as you search further (this needs to be improved)
         A = quality((points(indPoints,2)-a):(points(indPoints,2)+a),(points(indPoints,1)-a):(points(indPoints,1)+a));
         
@@ -50,7 +53,7 @@ for indPoints = 1:size(points,1)
         
         a = a+1;
     end
-    newPoints(indPoints,:) = [points(indPoints,1)+(x-xc), points(indPoints,2)+y-yc];
+    newPoints(indPoints,:) = [points(indPoints,1)+(x-xc), points(indPoints,2)+(y-yc)];
     
 end
 

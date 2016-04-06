@@ -48,7 +48,7 @@ for i = 1:numel(folders)
             [xfit, yfit, rfit] = circfit(xpts,ypts);
             
             xoi = round(xfit);
-            yoi = round(yfit+rfit+5/MM_PER_PIXEL);
+            yoi = round(yfit+rfit+3/MM_PER_PIXEL);
             
             leftWall = find(Iseg2(yoi, 1:xoi) == 3, 1, 'last');
             rightWall = round(xoi+find(Iseg2(yoi, xoi:end) == 3, 1, 'first'));
@@ -72,7 +72,7 @@ end
 toc
 
 %% DEBUGGING CODE STARTS FROM HERE ON DOWN
-filename = 'C0029600';
+filename = 'C0028341';
 images = dicomread(filename);
 info = dicominfo(filename);
 MM_PER_PIXEL = info.SequenceOfUltrasoundRegions.Item_1.PhysicalDeltaY*10;
@@ -92,94 +92,19 @@ Iseg2 = imquantize(imageROI,multithresh(imageROI,2));
 %% Look for bottom edge
 [height, width] = size(Iseg1);
 
-clear ypts xpts
-for indCol = round(2*width/8):round(6*width/8)
-    if size(find(Iseg1(round(height/2):height, indCol) == 2, 1, 'first'),1) == 1
-        ypts(indCol) = round(height/2) + find(Iseg1(round(height/2):height, indCol) == 2, 1, 'first');
-        xpts(indCol) = indCol;
+clear pts
+buffer = 20;
+
+for indCol = 1:width
+    if size(find(imageROI(round(height/2):height-buffer,indCol) >= 20, 1, 'first'),1)==1
+        pts(indCol) = round(height/2) + ...
+            find(imageROI(round(height/2):height-buffer,indCol) >= 20,1, 'first');
     end
 end
 
-[xfit, yfit, rfit] = circfit(xpts,ypts);
-imagesc(Iseg1)
-hold on
-rectangle('position',[xfit-rfit,yfit-rfit,rfit*2,rfit*2],...
-    'curvature',[1,1],'linestyle','-','edgecolor','y','LineWidth',2);
+[ylo, xlo] = max(pts);
 
+yoi = ylo + 3/MM_PER_PIXEL;
+xoi = xlo;
 
-%% Fit circle
-[xfit, yfit, rfit] = circfit(xpts,ypts);
-
-xoi = round(xfit);
-yoi = round(yfit+rfit+3/MM_PER_PIXEL);
-
-if Iseg1(yoi,xoi) == 2
-    for ind = yoi:height-10
-        if size(find(Iseg2(ind, 1:xoi) == 1, 2, 'last'),1) == 1
-            edges(ind) = find(Iseg2(ind, 1:xoi) == 1, 1, 'last');
-        end
-    end
-end
-
-leftWall = find(Iseg2(yoi, 1:xoi) == 3, 1, 'last');
-rightWall = round(xoi+find(Iseg2(yoi, xoi:end) == 3, 1, 'first'));
-
-ONSD = (rightWall - leftWall)*MM_PER_PIXEL;
-
-%%
-
-RGB = insertMarker(imageROI,[leftWall yoi; rightWall yoi],'o','Color','yellow','size',8);
-imshow(RGB)
-hold on
-
-plot([leftWall, rightWall], [yoi,yoi],'y-','LineWidth',1)
-
-
-%%
-clear Iseg RGB          % changed dimensions from those above
-thresh = multithresh(I,threshLevel(1));
-Iseg(:,:) = imquantize(I,thresh);
-RGB(:,:,:) = label2rgb(Iseg);
-
-[height, width] = size(Iseg);
-
-for indCol = 20:200
-    ypts(indCol) = round(height/2) + find(Iseg(round(height/2):height, indCol) == 2, 1, 'first');
-end
-
-
-[xfit, yfit, rfit] = circfit(20:200, ypts(20:200));
-
-figure
-plot(20:200,ypts(20:200))
-hold on
-rectangle('position',[xfit-rfit,yfit-rfit,rfit*2,rfit*2],...
-    'curvature',[1,1],'linestyle','-','edgecolor','r');
-% plot(xfit,yfit,'r')
-
-
-%%
-
-
-
-info = dicominfo(filename);
-MM_PER_PIXEL = info.SequenceOfUltrasoundRegions.Item_1.PhysicalDeltaY*10;
-
-xoi = xfit;
-yoi = round(yfit+rfit+5/MM_PER_PIXEL);
-
-thresh = multithresh(I,threshLevel(2));
-Iseg = imquantize(I,thresh);
-
-find(Iseg(yoi, 1:xoi) == 3, 1, 'last')
-round(xoi+find(Iseg(yoi, xoi:end) == 3, 1, 'first'))
-
-
-
-%%
-
-imshow(imageROI)
-hold on
-rectangle('position',[xfit-rfit,yfit-rfit,rfit*2,rfit*2],...
-    'curvature',[1,1],'linestyle','-','edgecolor','y','LineWidth',2);
 
